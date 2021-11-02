@@ -6,8 +6,11 @@ function git::get_ahead_count
   echo (command git log 2> /dev/null | grep '^commit' | wc -l | tr -d " ")
 end
 
-function git::branch_name
-  command git symbolic-ref --short HEAD
+function git::branch_name_or_commit
+  command git symbolic-ref --short HEAD 2> /dev/null
+  if [ $status -gt 0 ]
+    command git show-ref --head -s --abbrev |head -n1 2> /dev/null
+  end
 end
 
 function git::is_touched
@@ -30,7 +33,7 @@ function fish_right_prompt
       else
         echo ""
       end
-    end)(__batman_color_fst)(git::branch_name)(__batman_color_snd)(begin
+    end)(__batman_color_fst)(git::branch_name_or_commit)(__batman_color_snd)(begin
       set -l count (git::get_ahead_count)
         if test $count -eq 0
           echo ""
